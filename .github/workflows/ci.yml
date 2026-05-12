@@ -1,0 +1,67 @@
+name: CI & Despliegue a GitHub Pages
+
+on:
+  push:
+    branches: ["main"]           # Se activa al hacer push a main
+  pull_request:
+    branches: ["main"]           # También en Pull Requests hacia main
+  workflow_dispatch:             # Permite ejecutarlo manualmente desde GitHub
+
+concurrency:
+  group: 'CI-CD-GHPages'
+  cancel-in-progress: true       # Cancela ejecuciones anteriores si llega una nueva
+
+jobs:
+
+  # ─────────────────────────────────────────────────────
+  # Job 1: Verificación de Código
+  # ─────────────────────────────────────────────────────
+  verificar_codigo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del Repositorio
+        uses: actions/checkout@v4
+
+      - name: Mostrar archivos del proyecto
+        run: ls -R
+
+      - name: Verificar que existen los archivos principales
+        run: |
+          echo "Verificando home.html..."
+          test -f home.html && echo "✓ home.html encontrado" || echo "✗ home.html NO encontrado"
+          echo "Verificando styles.css..."
+          test -f styles.css && echo "✓ styles.css encontrado" || echo "✗ styles.css NO encontrado"
+
+  # ─────────────────────────────────────────────────────
+  # Job 2: Despliegue a GitHub Pages
+  # ─────────────────────────────────────────────────────
+  desplegar_pagina:
+    needs: verificar_codigo        # Depende de que el job de verificación termine con éxito
+    if: github.ref == 'refs/heads/main'  # Solo despliega si es la rama 'main'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout del Repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir Artifactos de Despliegue
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './'
+
+      - name: Iniciar Despliegue a Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
