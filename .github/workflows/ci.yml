@@ -13,9 +13,7 @@ concurrency:
 
 jobs:
 
-  # ─────────────────────────────────────────────────────
-  # Job 1: Verificación de Código
-  # ─────────────────────────────────────────────────────
+
   verificar_codigo:
     runs-on: ubuntu-latest
 
@@ -33,9 +31,7 @@ jobs:
           echo "Verificando styles.css..."
           test -f styles.css && echo "✓ styles.css encontrado" || echo "✗ styles.css NO encontrado"
 
-  # ─────────────────────────────────────────────────────
-  # Job 2: Despliegue a GitHub Pages
-  # ─────────────────────────────────────────────────────
+
   desplegar_pagina:
     needs: verificar_codigo        # Depende de que el job de verificación termine con éxito
     if: github.ref == 'refs/heads/main'  # Solo despliega si es la rama 'main'
